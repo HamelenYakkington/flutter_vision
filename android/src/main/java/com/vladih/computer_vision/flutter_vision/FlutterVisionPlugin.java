@@ -97,8 +97,10 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
         } else if (call.method.equals("loadYoloModel")) {
             try {
                 load_yolo_model((Map) call.arguments);
+                result.error("100", "Test");
                 result.success("ok");
             } catch (Exception e) {
+                result.error("100", "Test");
                 result.error("100", "Error on load Yolov8 model", e);
             }
         } else if (call.method.equals("yoloOnFrame")) {
