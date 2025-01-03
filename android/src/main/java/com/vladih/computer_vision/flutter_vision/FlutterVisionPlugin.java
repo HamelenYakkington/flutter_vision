@@ -181,9 +181,27 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
         final int rotation = (int) args.get("rotation");
         final String version = args.get("model_version").toString();
     
-        String resolvedModelPath = isFileLocal(modelPath) ? modelPath : this.assets.getAssetFilePathByName(modelPath);
-        String resolvedLabelPath = isFileLocal(labelPath) ? labelPath : this.assets.getAssetFilePathByName(labelPath);
-    
+        String resolvedModelPath;
+        if (isFileLocal(modelPath)) {
+            File file = new File(modelPath);
+            if (!file.exists()) {
+                throw new FileNotFoundException("Model file not found at " + file.getAbsolutePath());
+            }
+            resolvedModelPath = file.getAbsolutePath();
+        } else {
+            resolvedModelPath = this.assets.getAssetFilePathByName(modelPath);
+        }
+        String resolvedLabelPath;
+        if (isFileLocal(labelPath)) {
+            File file = new File(labelPath);
+            if (!file.exists()) {
+                throw new FileNotFoundException("Label file not found at " + file.getAbsolutePath());
+            }
+            resolvedLabelPath = file.getAbsolutePath();
+        } else {
+            resolvedLabelPath = this.assets.getAssetFilePathByName(modelPath);
+        }
+
         switch (version) {
             case "yolov5": {
                 yolo_model = new Yolov5(
@@ -232,6 +250,13 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
     private boolean isFileLocal(String filePath) {
         
         return filePath.startsWith("/data/") || filePath.startsWith("/storage/");
+    }
+
+    private String resolveLocalPath(String path) {
+        if (!path.startsWith("/")) {
+            return context.getFilesDir().getPath() + "/" + path;
+        }
+        return path;
     }
 
     //https://www.baeldung.com/java-single-thread-executor-service
