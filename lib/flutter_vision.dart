@@ -85,6 +85,7 @@ abstract class FlutterVision {
   /// args: [modelPath] - path to the model file
   /// ,[labelsPath] - path to the labels file
   /// ,[modelVersion] - yolov5, yolov8
+  /// ,[is_asset] - when  set to true, use assetMapper
   /// ,[quantization] - When set to true, quantized models are used, which can result in faster execution, reduced memory usage, and slightly lower accuracy.
   /// ,[numThreads] - number of threads to use for inference
   /// ,[useGPU] - use GPU for inference
@@ -92,6 +93,7 @@ abstract class FlutterVision {
       {required String modelPath,
       required String labels,
       required String modelVersion,
+      bool? is_asset,
       bool? quantization,
       int? numThreads,
       bool? useGpu});
