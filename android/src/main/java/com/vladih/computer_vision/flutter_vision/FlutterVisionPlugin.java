@@ -182,25 +182,43 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
         final String version = args.get("model_version").toString();
     
         String resolvedModelPath;
-        if (isFileLocal(modelPath)) {
-            File file = new File(modelPath);
-            if (!file.exists()) {
-                throw new FileNotFoundException("Model file not found at " + file.getAbsolutePath());
-            }
-            resolvedModelPath = file.getAbsolutePath();
-        } else {
-            resolvedModelPath = this.assets.getAssetFilePathByName(modelPath);
-        }
         String resolvedLabelPath;
-        if (isFileLocal(labelPath)) {
-            File file = new File(labelPath);
-            if (!file.exists()) {
-                throw new FileNotFoundException("Label file not found at " + file.getAbsolutePath());
+    
+        try {
+            if (is_asset) {
+                resolvedModelPath = this.assets.getAssetFilePathByName(modelPath);
+                Log.d("FlutterVisionPlugin", "Resolved model path (asset): " + resolvedModelPath);
+            } else if (isFileLocal(modelPath)) {
+                File modelFile = new File(modelPath);
+                if (!modelFile.exists()) {
+                    throw new FileNotFoundException("Model file not found at " + modelFile.getAbsolutePath());
+                }
+                resolvedModelPath = modelFile.getAbsolutePath();
+                Log.d("FlutterVisionPlugin", "Resolved model path (local): " + resolvedModelPath);
+            } else {
+                throw new IllegalArgumentException("Invalid model path: " + modelPath);
             }
-            resolvedLabelPath = file.getAbsolutePath();
-        } else {
-            resolvedLabelPath = this.assets.getAssetFilePathByName(modelPath);
+    
+            if (is_asset) {
+                resolvedLabelPath = this.assets.getAssetFilePathByName(labelPath);
+                Log.d("FlutterVisionPlugin", "Resolved label path (asset): " + resolvedLabelPath);
+            } else if (isFileLocal(labelPath)) {
+                File labelFile = new File(labelPath);
+                if (!labelFile.exists()) {
+                    throw new FileNotFoundException("Label file not found at " + labelFile.getAbsolutePath());
+                }
+                resolvedLabelPath = labelFile.getAbsolutePath();
+                Log.d("FlutterVisionPlugin", "Resolved label path (local): " + resolvedLabelPath);
+            } else {
+                throw new IllegalArgumentException("Invalid label path: " + labelPath);
+            }
+        } catch (Exception e) {
+            Log.e("FlutterVisionPlugin", "Error resolving paths: " + e.getMessage(), e);
+            throw e;
         }
+    
+        Log.d("FlutterVisionPlugin", "Final resolved model path: " + resolvedModelPath);
+        Log.d("FlutterVisionPlugin", "Final resolved label path: " + resolvedLabelPath);
 
         switch (version) {
             case "yolov5": {
@@ -240,11 +258,19 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
                 break;
             }
             default: {
-                throw new Exception("Model version must be yolov5, yolov8 or yolov8seg");
+                throw new Exception("Model version must be yolov5, yolov8, or yolov8seg");
             }
         }
-        yolo_model.initialize_model();
+    
+        try {
+            yolo_model.initialize_model();
+            Log.d("FlutterVisionPlugin", "YOLO model initialized successfully.");
+        } catch (Exception e) {
+            Log.e("FlutterVisionPlugin", "Failed to initialize YOLO model: " + e.getMessage(), e);
+            throw e;
+        }
     }
+    
     
 
     private boolean isFileLocal(String filePath) {
