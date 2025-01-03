@@ -171,50 +171,53 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
     }
 
     private void load_yolo_model(Map<String, Object> args) throws Exception {
-        final String model = this.assets.getAssetFilePathByName(args.get("model_path").toString());
-        final Object is_asset_obj = args.get("is_asset");
-        final boolean is_asset = is_asset_obj == null ? false : (boolean) is_asset_obj;
+        String modelPath = args.get("model_path").toString();
+        String labelPath = args.get("label_path").toString();
+    
+        final boolean is_asset = args.containsKey("is_asset") && (boolean) args.get("is_asset");
         final int num_threads = (int) args.get("num_threads");
         final boolean quantization = (boolean) args.get("quantization");
         final boolean use_gpu = (boolean) args.get("use_gpu");
-        final String label_path = this.assets.getAssetFilePathByName(args.get("label_path").toString());
         final int rotation = (int) args.get("rotation");
         final String version = args.get("model_version").toString();
+    
+        String resolvedModelPath = isFileLocal(modelPath) ? modelPath : this.assets.getAssetFilePathByName(modelPath);
+        String resolvedLabelPath = isFileLocal(labelPath) ? labelPath : this.assets.getAssetFilePathByName(labelPath);
+    
         switch (version) {
             case "yolov5": {
                 yolo_model = new Yolov5(
                         context,
-                        model,
+                        resolvedModelPath,
                         is_asset,
                         num_threads,
                         quantization,
                         use_gpu,
-                        label_path,
+                        resolvedLabelPath,
                         rotation);
                 break;
             }
             case "yolov8": {
                 yolo_model = new Yolov8(
                         context,
-                        model,
+                        resolvedModelPath,
                         is_asset,
                         num_threads,
                         quantization,
                         use_gpu,
-                        label_path,
+                        resolvedLabelPath,
                         rotation);
                 break;
             }
-
             case "yolov8seg": {
                 yolo_model = new Yolov8Seg(
                         context,
-                        model,
+                        resolvedModelPath,
                         is_asset,
                         num_threads,
                         quantization,
                         use_gpu,
-                        label_path,
+                        resolvedLabelPath,
                         rotation);
                 break;
             }
@@ -223,6 +226,12 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
             }
         }
         yolo_model.initialize_model();
+    }
+    
+
+    private boolean isFileLocal(String filePath) {
+        
+        return filePath.startsWith("/data/") || filePath.startsWith("/storage/");
     }
 
     //https://www.baeldung.com/java-single-thread-executor-service
