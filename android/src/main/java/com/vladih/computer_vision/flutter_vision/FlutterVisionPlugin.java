@@ -1,5 +1,11 @@
 package com.vladih.computer_vision.flutter_vision;
 
+import android.util.Log;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.concurrent.TimeUnit;
+
+
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -183,6 +189,10 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
     
         String resolvedModelPath;
         String resolvedLabelPath;
+
+        if (executor == null || executor.isShutdown()) {
+            executor = Executors.newSingleThreadExecutor();
+        }
     
         try {
             if (is_asset) {
@@ -368,8 +378,20 @@ public class FlutterVisionPlugin implements FlutterPlugin, MethodCallHandler {
     }
 
     private void close_yolo_model(Result result) {
+        if (!executor.isShutdown()) {
+            executor.shutdown();
+            try {
+                if (!executor.awaitTermination(1, TimeUnit.SECONDS)) {
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executor.shutdownNow();
+            }
+        }
         try {
+            System.out.println("Fermeture du modele Yolo");
             close_yolo();
+            
             result.success("Yolo model closed succesfully");
         } catch (Exception e) {
             result.error("100", "Close_yolo_model error", e);
